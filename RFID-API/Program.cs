@@ -3,45 +3,52 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar cadena de conexión a SQL Server
+// Configurar la cadena de conexión a SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Servicios de controllers, Swagger y CORS
+// Agregar servicios necesarios
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configurar CORS para frontend Angular (local)
+// ✅ Política CORS para permitir Angular
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4200") // Cambia si publicas frontend
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+    options.AddPolicy("AllowAngular",
+        policy => policy
+            .WithOrigins("http://localhost:4200") // o el dominio de tu frontend si ya lo subiste
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
+
+// ✅ IMPORTANTE para Railway: usar el puerto de entorno
+var port = Environment.GetEnvironmentVariable("PORT") ?? "3000";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
-// Habilitar Swagger solo en desarrollo
+// Mostrar Swagger solo en desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    // ❌ NO redirijas a HTTPS en producción (Railway ya usa HTTPS)
+    // app.UseHttpsRedirection();  // Se comenta para evitar error 502
+}
 
-// ⚠️ NO redirigir HTTPS en Railway
-// app.UseHttpsRedirection(); // ❌ Comentado para evitar error "Failed to determine https port"
-
-// CORS antes de Authorization
+// ✅ Aplicar CORS antes de Authorization
 app.UseCors("AllowAngular");
 
 app.UseAuthorization();
 
-app.MapControllers();
+// Ruta base opcional para prueba
+app.MapGet("/", () => "✅ API RFID en funcionamiento");
 
-// ✅ Escuchar en Railway (0.0.0.0 con puerto dinámico)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "3000";
-app.Urls.Add($"http://0.0.0.0:{port}");
+// Mapear los controladores
+app.MapControllers();
 
 app.Run();
