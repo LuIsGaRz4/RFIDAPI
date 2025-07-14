@@ -1,0 +1,65 @@
+CREATE DATABASE RFID
+SELECT * FROM RFID_ACCESOS
+SELECT * FROM RFID_REGISTRO
+SELECT * FROM RFID_TARJETAS
+SELECT * FROM RFID_USUARIOS
+
+-- CREAR TABLA ACCESOS
+CREATE TABLE RFID_ACCESOS (
+    IdAccesos BIT PRIMARY KEY,
+    Descripcion VARCHAR(100)
+);
+
+-- CREAR TABLA TARJETAS
+CREATE TABLE RFID_TARJETAS (
+    IdTarjeta VARCHAR(100) PRIMARY KEY,
+    Nombre VARCHAR(255)
+);
+
+-- CREAR TABLA USUARIOS
+CREATE TABLE RFID_USUARIOS (
+    IdUsuario INT PRIMARY KEY,
+    Nombre VARCHAR(255),
+    Rol VARCHAR(100),
+    IdTarjeta VARCHAR(100),
+    FOREIGN KEY (IdTarjeta) REFERENCES RFID_TARJETAS(IdTarjeta)
+);
+
+-- CREAR TABLA REGISTRO
+CREATE TABLE RFID_REGISTRO (
+    IdRegistro VARCHAR(100) PRIMARY KEY,
+    IdAccesos BIT,
+    Nombre VARCHAR(255),
+    Fecha DATETIME,
+    FOREIGN KEY (IdAccesos) REFERENCES RFID_ACCESOS(IdAccesos)
+);
+
+-- INSERTAR DATOS EN ACCESOS
+INSERT INTO RFID_ACCESOS (IdAccesos, Descripcion) VALUES
+(0, 'DENEGADO'),
+(1, 'PERMITIDO');
+
+-- INSERTAR DATOS EN TARJETAS
+INSERT INTO RFID_TARJETAS (IdTarjeta, Nombre) VALUES
+('023eba21', 'Luis Garza'),
+('55002ae726', 'Fabian Mar'),
+('55002b7575', 'Visita'),
+('55002f03c0', 'Karen Del Angel'),
+('5500577ae9', 'Externo'),
+('55005816de', 'Abraham Cisneros');
+
+-- INSERTAR DATOS EN USUARIOS
+INSERT INTO RFID_USUARIOS (IdUsuario, Nombre, Rol, IdTarjeta) VALUES
+(1, 'Luis Garza', 'Supervisor', '023eba21'),
+(2, 'Fabian Mar', 'Empleado', '55002ae726'),
+(3, 'Abraham Cisneros', 'Empleado', '55005816de');
+
+-- INSERTAR DATOS EN REGISTRO
+INSERT INTO RFID_REGISTRO (IdRegistro, IdAccesos, Nombre, Fecha) VALUES
+('023eba21', 0, 'Luis Garza', '2025-07-11 04:29:46.718'),
+('55002ae726', 0, 'Fabian Mar', '2025-07-10 18:30:07.465'),
+('55002b7575', 0, 'Visita', '2025-07-10 18:30:00.603'),
+('55002f03c0', 0, 'Karen Del Angel', '2025-07-10 18:30:13.100'),
+('5500577ae9', 0, 'Externo', '2025-07-10 18:30:19.774'),
+('55005816de', 0, 'Abraham Cisneros', '2025-07-10 18:30:24.595');
+
