@@ -3,43 +3,45 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar la cadena de conexión a SQL Server
+// Configurar cadena de conexión a SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Agregar servicios necesarios
+// Servicios de controllers, Swagger y CORS
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ Agregar política CORS para permitir solicitudes desde Angular
+// Configurar CORS para frontend Angular (local)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular",
-        policy => policy
-            .WithOrigins("http://localhost:4200")  // Dirección desde donde corre tu frontend Angular
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+    options.AddPolicy("AllowAngular", policy =>
+        policy.WithOrigins("http://localhost:4200") // Cambia si publicas frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
-// Configuración del pipeline de la aplicación
+// Habilitar Swagger solo en desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// ⚠️ NO redirigir HTTPS en Railway
+// app.UseHttpsRedirection(); // ❌ Comentado para evitar error "Failed to determine https port"
 
-// ✅ Usar CORS antes de Authorization
+// CORS antes de Authorization
 app.UseCors("AllowAngular");
 
 app.UseAuthorization();
 
-// Mapear los controladores (endpoints)
 app.MapControllers();
 
-// Ejecutar la aplicación
+// ✅ Escuchar en Railway (0.0.0.0 con puerto dinámico)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "3000";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
 app.Run();
