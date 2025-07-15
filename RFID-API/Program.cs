@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
         policy => policy
-            .WithOrigins("http://localhost:4200")  // Dirección desde donde corre tu frontend Angular
+            .WithOrigins("https://white-stone-0d90a691e.2.azurestaticapps.net")  // Dirección desde donde corre tu frontend Angular
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -33,7 +33,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 // ✅ Usar CORS antes de Authorization
 app.UseCors("AllowAngular");
