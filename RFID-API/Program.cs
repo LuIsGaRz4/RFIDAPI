@@ -1,4 +1,4 @@
-﻿using RFID_API.Data;
+using RFID_API.Data;
 using Microsoft.EntityFrameworkCore;
 using RFID_API.Hubs; // 👈 importa tu Hub
 
