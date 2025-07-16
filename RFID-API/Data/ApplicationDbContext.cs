@@ -24,7 +24,7 @@ namespace RFID_API.Data
 
             // RFID_REGISTRO: PK = IdRegistro, FK = IdAccesos
             modelBuilder.Entity<RFIDRegistros>()
-                .HasKey(r => r.IdRegistro);
+                .HasKey(r => r.Id);
 
             modelBuilder.Entity<RFIDRegistros>()
                 .HasOne(r => r.Acceso)

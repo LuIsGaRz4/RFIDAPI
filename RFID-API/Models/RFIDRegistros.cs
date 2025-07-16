@@ -7,7 +7,8 @@ namespace RFID_API.Models
     public class RFIDRegistros
     {
         [Key]
-        [Column("IdRegistro")]
+        [Column("Id")]
+        public int Id { get; set; }
         public string? IdRegistro { get; set; }
 
 

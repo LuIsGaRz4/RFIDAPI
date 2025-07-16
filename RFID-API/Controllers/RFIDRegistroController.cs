@@ -101,32 +101,42 @@ public class RFIDRegistroController : ControllerBase
         return Ok(usuario);
     }
 
-    [HttpPut("Actualizarregistro")]
-    public async Task<IActionResult> PutRegistro([FromBody] RFIDRegistros registro, [FromHeader(Name = "idTarjeta")] string idTarjeta)
+    [HttpPut("ActualizarRegistro/{id}")]
+    public async Task<IActionResult> PutRegistro(int id, [FromBody] RFIDRegistros registroActualizado)
     {
-        if (registro.IdRegistro == null)
-            return BadRequest("El IdRegistro es obligatorio.");
-
-        var usuario = await _context.RFID_USUARIOS.FirstOrDefaultAsync(u => u.IdTarjeta == idTarjeta);
-        if (usuario == null)
-            return Unauthorized("Usuario no encontrado.");
-
-        if (usuario.Rol != "Supervisor")
-            return Forbid("No tienes permiso para modificar registros.");
-
-        var registroExistente = await _context.RFID_REGISTRO.FindAsync(registro.IdRegistro);
+        // Buscar el registro existente por ID (int)
+        var registroExistente = await _context.RFID_REGISTRO.FirstOrDefaultAsync(r => r.Id == id);
         if (registroExistente == null)
-            return NotFound();
+            return NotFound($"No se encontró ningún registro con Id '{id}'.");
 
-        registroExistente.IdAccesos = registro.IdAccesos;
-        registroExistente.Nombre = registro.Nombre;
-        registroExistente.Fecha = registro.Fecha;
+        // Actualizar los campos permitidos
+        registroExistente.IdAccesos = registroActualizado.IdAccesos;
+        registroExistente.Nombre = registroActualizado.Nombre;
+        registroExistente.Fecha = registroActualizado.Fecha;
 
+        // Guardar cambios
         await _context.SaveChangesAsync();
+
+        // Notificación por SignalR
         await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-actualizado");
 
-        return Ok(registroExistente);
+        return Ok(new
+        {
+            mensaje = "Registro actualizado correctamente",
+            registro = new
+            {
+                registroExistente.Id,
+                registroExistente.IdRegistro,
+                registroExistente.Nombre,
+                registroExistente.Fecha,
+                registroExistente.IdAccesos
+            }
+        });
     }
+
+
+
+
 
     [HttpPut("ActualizarPorTarjeta/{idTarjeta}")]
     public async Task<IActionResult> UpdateUsuarioPorTarjeta(string idTarjeta, [FromBody] RFIDUsuarios usuarioActualizado)
@@ -144,26 +154,38 @@ public class RFIDRegistroController : ControllerBase
         return Ok(new { mensaje = "Usuario actualizado correctamente." });
     }
 
-    [HttpDelete("BorrarRegistro/{idRegistro}")]
-    public async Task<IActionResult> DeleteRegistro(string idRegistro, [FromHeader(Name = "idTarjeta")] string idTarjeta)
+    [HttpDelete("BorrarRegistro/{id}")]
+    public async Task<IActionResult> DeleteRegistro(int id)
     {
-        var usuario = await _context.RFID_USUARIOS.FirstOrDefaultAsync(u => u.IdTarjeta == idTarjeta);
-        if (usuario == null)
-            return Unauthorized("Usuario no encontrado.");
+        var registro = await _context.RFID_REGISTRO.FindAsync(id);
 
-        if (usuario.Rol != "Supervisor")
-            return Forbid("No tienes permiso para eliminar registros.");
-
-        var registro = await _context.RFID_REGISTRO.FindAsync(idRegistro);
         if (registro == null)
-            return NotFound();
+            return NotFound($"No se encontró ningún registro con Id '{id}'.");
 
         _context.RFID_REGISTRO.Remove(registro);
         await _context.SaveChangesAsync();
+
         await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-eliminado");
 
-        return Ok(registro);
+        return Ok(new
+        {
+            mensaje = $"Se eliminó el registro con Id '{id}'.",
+            registroEliminado = new
+            {
+                registro.Id,
+                registro.IdRegistro,
+                registro.IdAccesos,
+                registro.Nombre,
+                registro.Fecha
+            }
+        });
     }
+
+
+
+
+
+
 
     [HttpDelete("BorrarTarjeta/{idTarjetaEliminar}")]
     public async Task<IActionResult> EliminarTarjeta(string idTarjetaEliminar, [FromHeader(Name = "idTarjeta")] string idTarjetaSolicitante)
