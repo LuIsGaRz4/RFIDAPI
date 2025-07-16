@@ -4,6 +4,7 @@ namespace RFID_API.Hubs
 {
     public class NotificationHub : Hub
     {
+<<<<<<< HEAD
         // Método que puede llamar el cliente para enviar un mensaje al servidor,
         // y que este lo reenvía a todos los clientes conectados
         public async Task SendMessageToAll(string message)
@@ -22,5 +23,8 @@ namespace RFID_API.Hubs
         {
             await Clients.User(userId).SendAsync("ReceiveMessage", message);
         }
+=======
+        // Puedes agregar métodos aquí si quieres
+>>>>>>> b71045f101fd9673d0bdb68be404bbd4a2d684e7
     }
 }

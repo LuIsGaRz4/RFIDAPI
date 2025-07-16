@@ -101,11 +101,28 @@ public class RFIDRegistroController : ControllerBase
         return Ok(usuario);
     }
 
+<<<<<<< HEAD
     [HttpPut("ActualizarRegistro/{id}")]
     public async Task<IActionResult> PutRegistro(int id, [FromBody] RFIDRegistros registroActualizado)
     {
         // Buscar el registro existente por ID (int)
         var registroExistente = await _context.RFID_REGISTRO.FirstOrDefaultAsync(r => r.Id == id);
+=======
+    [HttpPut("Actualizarregistro")]
+    public async Task<IActionResult> PutRegistro([FromBody] RFIDRegistros registro, [FromHeader(Name = "idTarjeta")] string idTarjeta)
+    {
+        if (registro.IdRegistro == null)
+            return BadRequest("El IdRegistro es obligatorio.");
+
+        var usuario = await _context.RFID_USUARIOS.FirstOrDefaultAsync(u => u.IdTarjeta == idTarjeta);
+        if (usuario == null)
+            return Unauthorized("Usuario no encontrado.");
+
+        if (usuario.Rol != "Supervisor")
+            return Forbid("No tienes permiso para modificar registros.");
+
+        var registroExistente = await _context.RFID_REGISTRO.FindAsync(registro.IdRegistro);
+>>>>>>> b71045f101fd9673d0bdb68be404bbd4a2d684e7
         if (registroExistente == null)
             return NotFound($"No se encontró ningún registro con Id '{id}'.");
 
@@ -114,6 +131,7 @@ public class RFIDRegistroController : ControllerBase
         registroExistente.Nombre = registroActualizado.Nombre;
         registroExistente.Fecha = registroActualizado.Fecha;
 
+<<<<<<< HEAD
         // Guardar cambios
         await _context.SaveChangesAsync();
 
@@ -138,6 +156,14 @@ public class RFIDRegistroController : ControllerBase
 
 
 
+=======
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-actualizado");
+
+        return Ok(registroExistente);
+    }
+
+>>>>>>> b71045f101fd9673d0bdb68be404bbd4a2d684e7
     [HttpPut("ActualizarPorTarjeta/{idTarjeta}")]
     public async Task<IActionResult> UpdateUsuarioPorTarjeta(string idTarjeta, [FromBody] RFIDUsuarios usuarioActualizado)
     {
@@ -154,16 +180,31 @@ public class RFIDRegistroController : ControllerBase
         return Ok(new { mensaje = "Usuario actualizado correctamente." });
     }
 
+<<<<<<< HEAD
     [HttpDelete("BorrarRegistro/{id}")]
     public async Task<IActionResult> DeleteRegistro(int id)
     {
         var registro = await _context.RFID_REGISTRO.FindAsync(id);
 
+=======
+    [HttpDelete("BorrarRegistro/{idRegistro}")]
+    public async Task<IActionResult> DeleteRegistro(string idRegistro, [FromHeader(Name = "idTarjeta")] string idTarjeta)
+    {
+        var usuario = await _context.RFID_USUARIOS.FirstOrDefaultAsync(u => u.IdTarjeta == idTarjeta);
+        if (usuario == null)
+            return Unauthorized("Usuario no encontrado.");
+
+        if (usuario.Rol != "Supervisor")
+            return Forbid("No tienes permiso para eliminar registros.");
+
+        var registro = await _context.RFID_REGISTRO.FindAsync(idRegistro);
+>>>>>>> b71045f101fd9673d0bdb68be404bbd4a2d684e7
         if (registro == null)
             return NotFound($"No se encontró ningún registro con Id '{id}'.");
 
         _context.RFID_REGISTRO.Remove(registro);
         await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-eliminado");
 
         await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-eliminado");
 
@@ -181,12 +222,15 @@ public class RFIDRegistroController : ControllerBase
         });
     }
 
+<<<<<<< HEAD
 
 
 
 
 
 
+=======
+>>>>>>> b71045f101fd9673d0bdb68be404bbd4a2d684e7
     [HttpDelete("BorrarTarjeta/{idTarjetaEliminar}")]
     public async Task<IActionResult> EliminarTarjeta(string idTarjetaEliminar, [FromHeader(Name = "idTarjeta")] string idTarjetaSolicitante)
     {
