@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR; // 👈 Añadido para SignalR
 using RFID_API.Data;
 using RFID_API.Models;
-using RFID_API.Hubs; // 👈 Añadido para SignalR
+using RFID_API.Hubs;
+using System.Globalization;
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -62,14 +64,24 @@ public class RFIDRegistroController : ControllerBase
             return BadRequest("Tarjeta no registrada");
 
         registro.Nombre = tarjeta.Nombre;
-        registro.Fecha = DateTime.UtcNow;
+
+        // Asignar acceso aleatorio: true o false
+        var random = new Random();
+        registro.IdAccesos = random.Next(0, 2) == 1; // 0 o 1, si es 1 es true
+
+        // Convertir la fecha UTC a hora local de Reynosa (Central Standard Time)
+        var zonaHoraria = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+        registro.Fecha = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHoraria);
 
         _context.RFID_REGISTRO.Add(registro);
         await _context.SaveChangesAsync();
+
         await _hubContext.Clients.All.SendAsync("RecibirActualizacion", "registro-agregado");
 
         return CreatedAtAction(nameof(GetRegistros), new { id = registro.IdRegistro }, registro);
     }
+
+
 
     [HttpPost("AgregarTarjetas")]
     public async Task<IActionResult> AgregarTarjeta([FromBody] RFIDTarjetas nuevaTarjeta)
